@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -54,9 +55,25 @@ func main() {
 			return err
 		}
 
+		// write auth-cookie
+		cookie := new(http.Cookie)
+		cookie.Name = "auth-cookie"
+		cookie.Value = t
+		cookie.Expires = time.Now().Add(24 * time.Hour)
+		c.SetCookie(cookie)
+
 		return c.JSON(200, map[string]string{
 			"token": t,
 		})
+	})
+
+	e.POST("/logout", func(c echo.Context) error {
+		cookie := new(http.Cookie)
+		cookie.Name = "auth-cookie"
+		cookie.Value = ""
+		cookie.Expires = time.Now().Add(-1 * time.Hour)
+		c.SetCookie(cookie)
+		return c.NoContent(204)
 	})
 
 	r := e.Group("/restricted")
